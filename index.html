@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가계부</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@300;400;500&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #fdf8f2;
+      --surface: #ffffff;
+      --surface2:#faf5ee;
+      --border:  #e8ddd0;
+      --border2: #d4c8b8;
+      --muted:   #b0a090;
+      --text:    #3d3028;
+      --text2:   #6b5d50;
+      --gold:    #b8944a;
+      --gold-lt: #d4aa60;
+      --gold-bg: #fdf3e0;
+      --green:   #4a8c6a;
+      --green-bg:#eef7f2;
+      --red:     #b85454;
+      --red-bg:  #fdf0f0;
+      --blue:    #4a70a0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Serif KR', 'Lato', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--gold);
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(184,148,74,0.08);
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.55rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+    }
+
+    header h1 span {
+      display: block;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 300;
+      text-transform: uppercase;
+    }
+
+    .month-nav { display: flex; align-items: center; gap: 14px; }
+
+    .month-nav button {
+      background: var(--gold-bg);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .month-nav button:hover { background: var(--gold); color: white; }
+
+    .month-nav span {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.92rem;
+      color: var(--text2);
+      min-width: 92px;
+      text-align: center;
+    }
+
+    /* ── Summary ── */
+    .summary {
+      display: flex;
+      gap: 12px;
+      padding: 16px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary .card {
+      flex: 1;
+      text-align: center;
+      padding: 14px 8px;
+      border-radius: 10px;
+      border: 1px solid;
+    }
+
+    .card.income  { background: var(--green-bg); border-color: #c8e8d8; }
+    .card.expense { background: var(--red-bg);   border-color: #f0d4d4; }
+    .card.balance { background: var(--gold-bg);  border-color: #f0e0b8; }
+
+    .card .label {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .card .amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 400;
+    }
+
+    .card.income  .amount { color: var(--green); }
+    .card.expense .amount { color: var(--red); }
+    .card.balance .amount { color: var(--gold); }
+
+    /* ── Add Form ── */
+    .add-form {
+      background: var(--surface2);
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .add-form .type-toggle {
+      display: flex;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .type-toggle button {
+      padding: 8px 14px;
+      border: none;
+      background: white;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      font-family: 'Noto Serif KR', serif;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .type-toggle button.active-income  { background: var(--green); color: white; }
+    .type-toggle button.active-expense { background: var(--red);   color: white; }
+
+    .add-form input, .add-form select {
+      padding: 8px 12px;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      background: white;
+      color: var(--text);
+      outline: none;
+      font-family: 'Noto Serif KR', serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .add-form input:focus, .add-form select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(184,148,74,0.12);
+    }
+
+    .add-form input::placeholder { color: var(--muted); }
+
+    .add-form input[name=desc]   { flex: 2;   min-width: 120px; }
+    .add-form input[name=amount] { flex: 1.5; min-width: 100px; }
+    .add-form input[name=date]   { flex: 1.5; min-width: 130px; }
+    .add-form select             { flex: 1.5; min-width: 100px; }
+
+    .add-form button.add-btn {
+      padding: 8px 22px;
+      background: var(--gold);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      font-family: 'Noto Serif KR', serif;
+      white-space: nowrap;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 6px rgba(184,148,74,0.25);
+    }
+
+    .add-form button.add-btn:hover {
+      background: var(--gold-lt);
+      box-shadow: 0 3px 10px rgba(184,148,74,0.35);
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tabs button {
+      flex: 1;
+      padding: 13px 0;
+      border: none;
+      background: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      font-family: 'Noto Serif KR', serif;
+      transition: color 0.2s;
+    }
+
+    .tabs button.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+      font-weight: 500;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Ledger ── */
+    .list-section { padding: 20px 28px; }
+
+    .list-section h2 {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      color: var(--muted);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .no-data {
+      text-align: center;
+      color: var(--muted);
+      padding: 48px 0;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+    }
+
+    .entry {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px 16px;
+      margin-bottom: 7px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .entry:hover {
+      border-color: var(--gold);
+      box-shadow: 0 2px 8px rgba(184,148,74,0.1);
+    }
+
+    .entry .date-badge {
+      width: 44px;
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 0.8rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .entry .cat-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.67rem;
+      color: var(--text2);
+      margin: 0 12px;
+      flex-shrink: 0;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .entry .desc {
+      flex: 1;
+      font-size: 0.87rem;
+      color: var(--text);
+      font-weight: 300;
+    }
+
+    .entry .amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .entry .amount.income { color: var(--green); }
+    .entry .amount.expense { color: var(--red); }
+
+    .entry .del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--border2);
+      font-size: 0.82rem;
+      margin-left: 10px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .entry .del-btn:hover { color: var(--red); background: var(--red-bg); }
+
+    /* ── Stat Sections ── */
+    .stat-section { padding: 20px 28px; }
+
+    .stat-section h2 {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      color: var(--muted);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .stat-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .stat-table th {
+      background: var(--surface2);
+      font-family: 'Lato', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 400;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-table td {
+      padding: 11px 14px;
+      font-size: 0.83rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text2);
+    }
+
+    .stat-table tr:hover td { background: var(--surface2); }
+    .stat-table .num { text-align: right; }
+    .stat-table .income-txt  { color: var(--green); font-weight: 500; }
+    .stat-table .expense-txt { color: var(--red);   font-weight: 500; }
+    .stat-table .balance-txt { color: var(--gold);  font-weight: 500; }
+
+    /* ── Bar Chart ── */
+    .chart-legend {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 14px;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .bar-label {
+      width: 52px;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.72rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .bar-wrap {
+      flex: 1;
+      background: var(--border);
+      border-radius: 3px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+    .bar-fill.income  { background: var(--green); }
+    .bar-fill.expense { background: var(--red); }
+
+    .bar-val {
+      width: 96px;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text2);
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    /* ── Category chart ── */
+    .cat-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .cat-stat-label { width: 52px; font-size: 0.75rem; color: var(--text2); flex-shrink: 0; }
+    .cat-bar-wrap { flex: 1; background: var(--border); border-radius: 3px; height: 8px; overflow: hidden; }
+    .cat-bar-fill { height: 100%; border-radius: 3px; background: var(--red); opacity: 0.7; }
+    .cat-stat-val { width: 86px; font-size: 0.72rem; color: var(--red); text-align: right; flex-shrink: 0; font-weight: 500; }
+    .cat-stat-pct { width: 36px; font-size: 0.68rem; color: var(--muted); text-align: right; flex-shrink: 0; }
+
+    /* 구분선 */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>가계부<span>Maison Budget · Cheongdam</span></h1>
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">&#8249;</button>
+    <span id="month-label"></span>
+    <button onclick="changeMonth(1)">&#8250;</button>
+  </div>
+</header>
+
+<div class="summary">
+  <div class="card income">
+    <div class="label">Income</div>
+    <div class="amount" id="total-income">0원</div>
+  </div>
+  <div class="card expense">
+    <div class="label">Expense</div>
+    <div class="amount" id="total-expense">0원</div>
+  </div>
+  <div class="card balance">
+    <div class="label">Balance</div>
+    <div class="amount" id="total-balance">0원</div>
+  </div>
+</div>
+
+<div class="add-form">
+  <div class="type-toggle">
+    <button id="btn-income" class="active-income" onclick="setType('income')">수입</button>
+    <button id="btn-expense" onclick="setType('expense')">지출</button>
+  </div>
+  <input type="date" name="date" id="input-date">
+  <input type="text" name="desc" id="input-desc" placeholder="내용">
+  <select id="input-cat"></select>
+  <input type="number" name="amount" id="input-amount" placeholder="금액" min="0">
+  <button class="add-btn" onclick="addEntry()">추가</button>
+</div>
+
+<div class="tabs">
+  <button class="active" onclick="switchTab('ledger', this)">내역</button>
+  <button onclick="switchTab('daily', this)">일별 통계</button>
+  <button onclick="switchTab('monthly', this)">월별 통계</button>
+</div>
+
+<!-- 내역 탭 -->
+<div id="tab-ledger" class="tab-panel active">
+  <div class="list-section">
+    <h2 id="list-title"></h2>
+    <div id="entry-list"></div>
+  </div>
+</div>
+
+<!-- 일별 통계 탭 -->
+<div id="tab-daily" class="tab-panel">
+  <div class="stat-section">
+    <h2 id="daily-title"></h2>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:var(--green)"></span>Income</span>
+      <span><span class="legend-dot" style="background:var(--red)"></span>Expense</span>
+    </div>
+    <div id="daily-chart"></div>
+    <hr class="divider">
+    <table class="stat-table">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th class="num">수입</th>
+          <th class="num">지출</th>
+          <th class="num">잔액</th>
+        </tr>
+      </thead>
+      <tbody id="daily-tbody"></tbody>
+    </table>
+    <h2>지출 카테고리</h2>
+    <div id="cat-chart"></div>
+  </div>
+</div>
+
+<!-- 월별 통계 탭 -->
+<div id="tab-monthly" class="tab-panel">
+  <div class="stat-section">
+    <h2>최근 12개월</h2>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:var(--green)"></span>Income</span>
+      <span><span class="legend-dot" style="background:var(--red)"></span>Expense</span>
+    </div>
+    <div id="monthly-chart"></div>
+    <hr class="divider">
+    <table class="stat-table">
+      <thead>
+        <tr>
+          <th>월</th>
+          <th class="num">수입</th>
+          <th class="num">지출</th>
+          <th class="num">잔액</th>
+        </tr>
+      </thead>
+      <tbody id="monthly-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth() + 1;
+  let currentType = 'income';
+  let currentTab = 'ledger';
+  let entries = JSON.parse(localStorage.getItem('kakeibo') || '[]');
+
+  const incomeCategories = ['급여', '용돈', '기타'];
+  const expenseCategories = ['식비', '교통', '쇼핑', '의료', '문화', '기타'];
+
+  function setType(type) {
+    currentType = type;
+    document.getElementById('btn-income').className = type === 'income' ? 'active-income' : '';
+    document.getElementById('btn-expense').className = type === 'expense' ? 'active-expense' : '';
+    const cats = type === 'income' ? incomeCategories : expenseCategories;
+    document.getElementById('input-cat').innerHTML =
+      cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+
+  function switchTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    btn.classList.add('active');
+    render();
+  }
+
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+    if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+    render();
+  }
+
+  function fmt(n) { return n.toLocaleString('ko-KR') + '원'; }
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function addEntry() {
+    const date = document.getElementById('input-date').value;
+    const desc = document.getElementById('input-desc').value.trim();
+    const cat = document.getElementById('input-cat').value;
+    const amount = parseInt(document.getElementById('input-amount').value);
+    if (!date || !desc || !amount || amount <= 0) {
+      alert('날짜, 내용, 금액을 모두 입력해주세요.');
+      return;
+    }
+    entries.push({ id: Date.now(), date, desc, cat, amount, type: currentType });
+    localStorage.setItem('kakeibo', JSON.stringify(entries));
+    document.getElementById('input-desc').value = '';
+    document.getElementById('input-amount').value = '';
+    render();
+  }
+
+  function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    localStorage.setItem('kakeibo', JSON.stringify(entries));
+    render();
+  }
+
+  function getMonthly(y, m) {
+    const prefix = `${y}-${pad(m)}`;
+    return entries.filter(e => e.date.startsWith(prefix));
+  }
+
+  function sumType(arr, type) {
+    return arr.filter(e => e.type === type).reduce((s, e) => s + e.amount, 0);
+  }
+
+  function renderSummary(monthly) {
+    const income = sumType(monthly, 'income');
+    const expense = sumType(monthly, 'expense');
+    document.getElementById('total-income').textContent = fmt(income);
+    document.getElementById('total-expense').textContent = fmt(expense);
+    document.getElementById('total-balance').textContent = fmt(income - expense);
+  }
+
+  function renderLedger(monthly) {
+    document.getElementById('list-title').textContent = `${currentMonth}월 거래 내역`;
+    const list = document.getElementById('entry-list');
+    if (monthly.length === 0) {
+      list.innerHTML = '<div class="no-data">이번 달 거래 내역이 없습니다.</div>';
+      return;
+    }
+    const byDay = {};
+    for (const e of monthly) {
+      if (!byDay[e.date]) byDay[e.date] = [];
+      byDay[e.date].push(e);
+    }
+    const days = Object.keys(byDay).sort((a, b) => b.localeCompare(a));
+    list.innerHTML = days.map(day => {
+      const dayNum = parseInt(day.split('-')[2]);
+      return byDay[day].map(e => `
+        <div class="entry">
+          <div class="date-badge">${dayNum}일</div>
+          <div class="cat-badge">${e.cat}</div>
+          <div class="desc">${e.desc}</div>
+          <div class="amount ${e.type}">${e.type === 'income' ? '+' : '−'}${fmt(e.amount)}</div>
+          <button class="del-btn" onclick="deleteEntry(${e.id})" title="삭제">✕</button>
+        </div>
+      `).join('');
+    }).join('');
+  }
+
+  function renderDaily(monthly) {
+    document.getElementById('daily-title').textContent = `${currentMonth}월 일별 수입 · 지출`;
+    const byDay = {};
+    for (const e of monthly) {
+      if (!byDay[e.date]) byDay[e.date] = { income: 0, expense: 0 };
+      byDay[e.date][e.type] += e.amount;
+    }
+    const days = Object.keys(byDay).sort();
+    if (days.length === 0) {
+      document.getElementById('daily-chart').innerHTML = '<div class="no-data">데이터가 없습니다.</div>';
+      document.getElementById('daily-tbody').innerHTML = '';
+      document.getElementById('cat-chart').innerHTML = '';
+      return;
+    }
+    const maxVal = Math.max(...days.map(d => Math.max(byDay[d].income, byDay[d].expense)), 1);
+
+    document.getElementById('daily-chart').innerHTML = days.map(day => {
+      const dayNum = parseInt(day.split('-')[2]);
+      const d = byDay[day];
+      const iPct = Math.round(d.income / maxVal * 100);
+      const ePct = Math.round(d.expense / maxVal * 100);
+      return `
+        <div class="bar-row">
+          <div class="bar-label">${dayNum}일</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+            <div class="bar-wrap"><div class="bar-fill income" style="width:${iPct}%"></div></div>
+            <div class="bar-wrap"><div class="bar-fill expense" style="width:${ePct}%"></div></div>
+          </div>
+          <div class="bar-val" style="line-height:1.7">
+            +${d.income.toLocaleString()}<br>−${d.expense.toLocaleString()}
+          </div>
+        </div>`;
+    }).join('');
+
+    let runBalance = 0;
+    document.getElementById('daily-tbody').innerHTML = days.map(day => {
+      const dayNum = parseInt(day.split('-')[2]);
+      const d = byDay[day];
+      runBalance += d.income - d.expense;
+      const balClass = runBalance >= 0 ? 'balance-txt' : 'expense-txt';
+      return `<tr>
+        <td>${dayNum}일</td>
+        <td class="num income-txt">${d.income > 0 ? '+' + fmt(d.income) : '—'}</td>
+        <td class="num expense-txt">${d.expense > 0 ? '−' + fmt(d.expense) : '—'}</td>
+        <td class="num ${balClass}">${fmt(runBalance)}</td>
+      </tr>`;
+    }).join('');
+
+    const catTotals = {};
+    for (const e of monthly.filter(e => e.type === 'expense')) {
+      catTotals[e.cat] = (catTotals[e.cat] || 0) + e.amount;
+    }
+    const totalExp = Object.values(catTotals).reduce((s, v) => s + v, 0);
+    const cats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+
+    document.getElementById('cat-chart').innerHTML = cats.length === 0
+      ? '<div class="no-data" style="padding:20px 0">지출 내역이 없습니다.</div>'
+      : cats.map(([cat, val]) => {
+          const pct = totalExp > 0 ? Math.round(val / totalExp * 100) : 0;
+          return `
+            <div class="cat-stat-row">
+              <div class="cat-stat-label">${cat}</div>
+              <div class="cat-bar-wrap"><div class="cat-bar-fill" style="width:${pct}%"></div></div>
+              <div class="cat-stat-val">−${fmt(val)}</div>
+              <div class="cat-stat-pct">${pct}%</div>
+            </div>`;
+        }).join('');
+  }
+
+  function renderMonthly() {
+    const months = [];
+    let y = currentYear, m = currentMonth;
+    for (let i = 0; i < 12; i++) {
+      months.unshift({ y, m });
+      m--;
+      if (m < 1) { m = 12; y--; }
+    }
+    const data = months.map(({ y, m }) => {
+      const arr = getMonthly(y, m);
+      return { label: `${y % 100}/${pad(m)}`, income: sumType(arr, 'income'), expense: sumType(arr, 'expense') };
+    });
+    const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expense)), 1);
+
+    document.getElementById('monthly-chart').innerHTML = data.map(d => `
+      <div class="bar-row">
+        <div class="bar-label" style="width:58px">${d.label}</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+          <div class="bar-wrap"><div class="bar-fill income" style="width:${Math.round(d.income/maxVal*100)}%"></div></div>
+          <div class="bar-wrap"><div class="bar-fill expense" style="width:${Math.round(d.expense/maxVal*100)}%"></div></div>
+        </div>
+        <div class="bar-val" style="line-height:1.7">
+          +${d.income.toLocaleString()}<br>−${d.expense.toLocaleString()}
+        </div>
+      </div>`).join('');
+
+    document.getElementById('monthly-tbody').innerHTML = data.map(d => {
+      const bal = d.income - d.expense;
+      const balClass = bal >= 0 ? 'balance-txt' : 'expense-txt';
+      return `<tr>
+        <td>${d.label}</td>
+        <td class="num income-txt">${d.income > 0 ? '+' + fmt(d.income) : '—'}</td>
+        <td class="num expense-txt">${d.expense > 0 ? '−' + fmt(d.expense) : '—'}</td>
+        <td class="num ${balClass}">${fmt(bal)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function render() {
+    document.getElementById('month-label').textContent =
+      `${currentYear}년 ${currentMonth}월`;
+    const monthly = getMonthly(currentYear, currentMonth);
+    monthly.sort((a, b) => b.date.localeCompare(a.date));
+    renderSummary(monthly);
+    if (currentTab === 'ledger') renderLedger(monthly);
+    else if (currentTab === 'daily') renderDaily(monthly);
+    else if (currentTab === 'monthly') renderMonthly();
+  }
+
+  const today = new Date();
+  document.getElementById('input-date').value =
+    `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+
+  setType('income');
+  render();
+</script>
+</body>
+</html>
